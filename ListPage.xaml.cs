@@ -16,13 +16,6 @@ public partial class ListPage : ContentPage
         await Navigation.PopAsync();
     }
 
-    async void OnDeleteButtonClicked(object sender, EventArgs e)
-    {
-        var slist = (ShopList)BindingContext;
-        await App.Database.DeleteShopListAsync(slist);
-        await Navigation.PopAsync();
-    }
-
     async void OnChooseButtonClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new ProductPage((ShopList)this.BindingContext)
@@ -31,10 +24,38 @@ public partial class ListPage : ContentPage
         });
     }
 
+    async void OnDeleteItemClicked(object sender, EventArgs e)
+    {
+        var selectedProduct = (Product)((MenuItem)sender).CommandParameter;
+
+        await App.Database.DeleteProductAsync(selectedProduct);
+
+
+        var shopList = (ShopList)BindingContext;
+        listView.ItemsSource = await App.Database.GetListProductsAsync(shopList.ID);
+    }
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         var shopList = (ShopList)BindingContext;
         listView.ItemsSource = await App.Database.GetListProductsAsync(shopList.ID);
+    }
+
+    async void OnDeleteItemButtonClicked(object sender, EventArgs e)
+    {
+        var selectedProduct = (Product)listView.SelectedItem;
+
+        if (selectedProduct != null)
+        {
+            await App.Database.DeleteProductAsync(selectedProduct);
+
+            var shopList = (ShopList)BindingContext;
+            listView.ItemsSource = await App.Database.GetListProductsAsync(shopList.ID);
+        }
+        else
+        {
+            await DisplayAlert("No Item Selected", "Please select an item to delete.", "OK");
+        }
     }
 }
